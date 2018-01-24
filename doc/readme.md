@@ -1,3 +1,7 @@
 # Scratch notes
-![](axis.PNG)
+
+## Figure Concepts
 ![](pixels.PNG)
+
+## Axis concepts
+![](axis.PNG)

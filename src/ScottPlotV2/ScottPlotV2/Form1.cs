@@ -26,11 +26,19 @@ namespace ScottPlotV2
             button1_Click(null, null);
         }
 
+        private void GenerateThePlot()
+        {
+            if (scottPlot == null) return;
+            scottPlot.Resize(pictureBox1.Width, pictureBox1.Height);
+            pictureBox1.Image = scottPlot.PlotDemoSine();
+            richTextBox1.Text = scottPlot.Info();
+        }
+
         // action click bindings
 
         private void button1_Click(object sender, EventArgs e)
         {
-            pictureBox1.Image = scottPlot.PlotDemo1();
+            GenerateThePlot();
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -55,9 +63,7 @@ namespace ScottPlotV2
 
         private void Form1_Resize(object sender, EventArgs e)
         {
-            if (scottPlot == null) return;
-            scottPlot.FigSize(pictureBox1.Width, pictureBox1.Height);
-            pictureBox1.Image = scottPlot.PlotDemo1();
+            GenerateThePlot();
         }
     }
 }

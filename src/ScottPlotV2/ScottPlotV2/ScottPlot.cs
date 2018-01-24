@@ -23,7 +23,8 @@ namespace ScottPlotV2
         private double axis_left, axis_top, axis_width, axis_height;
         private double px_per_unit_y, px_per_unit_x, units_per_px_x, units_per_px_y;
 
-        private Bitmap bmp_frame; // starting point for any data rendering
+        private Bitmap bmp_frame;
+        private Bitmap bmp_data;
 
         // customization
         private Color color_figure_background = Color.LightGray;
@@ -36,6 +37,8 @@ namespace ScottPlotV2
         private System.Drawing.Drawing2D.SmoothingMode smoothing_mode_frame = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
         private System.Drawing.Drawing2D.SmoothingMode smoothing_mode_data = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
+        // it helps to keep this running
+        private Random rand = new Random();
 
         /// <summary>
         /// Create a new ScottPlot object.
@@ -166,6 +169,57 @@ namespace ScottPlotV2
 
             stopwatch.Stop();
             time_redraw_axis_ms = (double)stopwatch.ElapsedTicks / System.Diagnostics.Stopwatch.Frequency * 1000.0;
+
+            PlotClear();
+        }
+
+        /// <summary>
+        /// Reset the data area clearing all graphs
+        /// </summary>
+        public void PlotClear()
+        {
+            bmp_data = new Bitmap(plot_width, plot_height);
+            Graphics gfx = Graphics.FromImage(bmp_data);
+            gfx.Clear(Color.Transparent);
+            gfx.Dispose();
+        }
+
+        public void PlotDemo2()
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Restart();
+
+            Graphics gfx = Graphics.FromImage(bmp_data);
+            gfx.SmoothingMode = smoothing_mode_data;
+
+            Point[] points = new Point[plot_width];
+            double offset = rand.NextDouble() * 200 + 50;
+            double frequency = rand.NextDouble() * .1+.01;
+            double amplitude = rand.NextDouble() * 100 + 10;
+
+            for (int x = 0; x < points.Length; x++)
+            {
+                double y = Math.Sin((double)x * frequency + offset) * amplitude + offset;
+                points[x] = new Point(x, (int)y);
+            }
+
+            Color randomColor = Color.FromArgb(150, rand.Next(200), rand.Next(200), rand.Next(200));
+            int penWidth = rand.Next(10);
+            Pen pen = new Pen(randomColor, penWidth+2);
+            gfx.DrawLines(pen, points);
+            gfx.Dispose();
+
+            stopwatch.Stop();
+            time_redraw_data_ms = (double)stopwatch.ElapsedTicks / System.Diagnostics.Stopwatch.Frequency * 1000.0;
+        }
+
+        public Bitmap GetBitmap()
+        {
+            //TODO: I think start to finish we are using RGBA. We could drop to 1-channel uint8
+            Bitmap bmp_merged = new Bitmap(bmp_frame);
+            Graphics gfx = Graphics.FromImage(bmp_merged);
+            gfx.DrawImage(bmp_data, new Point(plot_left, plot_top));
+            return bmp_merged;
         }
 
         private int UnitToPx_X(double unit)
@@ -342,52 +396,7 @@ namespace ScottPlotV2
             if (axisSpan < 10) return string.Format("{0:0.0}", value);
             return string.Format("{0:0}", value);
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-        /// <summary>
-        /// Demo is an alternative to sending actual data to plot
-        /// </summary>
-        /// <returns>final bitmap figure</returns>
-        public Bitmap PlotDemoSine()
-        {
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Restart();
-
-            Bitmap bmp_live = new Bitmap(bmp_frame); // start with the pre-drawn axis
-            Graphics gfx = Graphics.FromImage(bmp_live);
-            gfx.SmoothingMode = smoothing_mode_data;
-
-            Random rand = new Random();
-            Point[] points = new Point[plot_width];
-
-            for (int i = 0; i < points.Length; i++)
-            {
-                double y = Math.Sin((double)i * Math.PI / 50.0) * plot_height * .5 + plot_height * .5 + plot_top;
-                int x = plot_left + i;
-                points[i] = new Point(x, (int)y);
-            }
-
-            Pen pen = new Pen(color_data);
-            gfx.DrawLines(pen, points);
-            gfx.Dispose();
-
-            stopwatch.Stop();
-            time_redraw_data_ms = (double)stopwatch.ElapsedTicks / System.Diagnostics.Stopwatch.Frequency * 1000.0;
-
-            return bmp_live;
-        }
-
+        
 
 
     }

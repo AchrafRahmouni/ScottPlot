@@ -30,7 +30,11 @@ namespace ScottPlotV2
         {
             if (scottPlot == null) return;
             scottPlot.Resize(pictureBox1.Width, pictureBox1.Height);
-            pictureBox1.Image = scottPlot.PlotDemoSine();
+            for (int i=0; i<5; i++)
+            {
+                scottPlot.PlotDemo2();
+            }
+            pictureBox1.Image = scottPlot.GetBitmap();
             richTextBox1.Text = scottPlot.Info();
         }
 

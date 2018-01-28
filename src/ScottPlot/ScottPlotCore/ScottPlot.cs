@@ -461,31 +461,6 @@ namespace ScottPlot
             plotLineWidth = rand.Next(10) + 1;
             PlotLineXY(Xs.ToArray(), Ys.ToArray());
         }
-
-
-
-
-
-        /*
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         *          EXPERIMENTAL FUNCTIONS
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         */
-
-
-
         
         public string debug_message
         {
@@ -545,32 +520,20 @@ namespace ScottPlot
                 // right-click-drag zooming: expand the edges by the same distance of the drag when zooming out, or sqrt(distance) when zooming in.
                 double dX = (mouse_right_down_position.X - mouse_position.X) * mouse_right_down_axis.xAxis.unitsPerPx;
                 double dY = (mouse_position.Y - mouse_right_down_position.Y) * mouse_right_down_axis.yAxis.unitsPerPx;
-                if (dX < 0)
-                {
-                    dX = -Math.Sqrt(Math.Abs(dX));
-                }
-                if (dY < 0)
-                {
-                    dY = -Math.Sqrt(Math.Abs(dY));
-                }
-                axis1 = new FigureAxis(mouse_right_down_axis.xAxis.min - dX, mouse_right_down_axis.xAxis.max + dX,
-                                       mouse_right_down_axis.yAxis.min - dY, mouse_right_down_axis.yAxis.max + dY,
+
+                double dXFrac = dX / (Math.Abs(dX) + (mouse_right_down_axis.xAxis.max - mouse_right_down_axis.xAxis.min));
+                double dYFrac = dY / (Math.Abs(dY) + (mouse_right_down_axis.yAxis.max - mouse_right_down_axis.yAxis.min));
+
+                axis1 = new FigureAxis(mouse_right_down_axis.xAxis.min, mouse_right_down_axis.xAxis.max,
+                                       mouse_right_down_axis.yAxis.min, mouse_right_down_axis.yAxis.max,
                                        mouse_right_down_axis.xAxis.pxSize, mouse_right_down_axis.yAxis.pxSize);
+
+                axis1.Zoom(Math.Pow(10, dXFrac), Math.Pow(10, dYFrac));
+
                 Clear();
                 RedrawFrame();
             }
         }
-
-
-
-
-
-
-
-
-
-
-
 
     }
 }

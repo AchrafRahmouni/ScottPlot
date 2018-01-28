@@ -41,27 +41,30 @@ namespace ScottPlot
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Restart();
 
-            switch (combo_routine.Text)
+            bool draw_data_while_panning_or_zooming = true;
+            if (draw_data_while_panning_or_zooming || System.Windows.Forms.Control.MouseButtons == MouseButtons.None)
             {
-                case "confetti":
-                    scottPlot.PlotDemoConfetti();
-                    break;
-                case "sine":
-                    scottPlot.PlotDemoSine();
-                    break;
-                case "XY pairs":
-                    scottPlot.PlotDemoXY();
-                    break;
-                case "1M points":
-                    scottPlot.PlotSignal(million_points,.0005,-10);
-                    break;
-                case "100 points":
-                    scottPlot.PlotSignal(hundred_points, .2, -10);
-                    break;
-                default:
-                    scottPlot.Clear();
-                    break;
-
+                switch (combo_routine.Text)
+                {
+                    case "confetti":
+                        scottPlot.PlotDemoConfetti();
+                        break;
+                    case "sine":
+                        scottPlot.PlotDemoSine();
+                        break;
+                    case "XY pairs":
+                        scottPlot.PlotDemoXY();
+                        break;
+                    case "1M points":
+                        scottPlot.PlotSignal(million_points, .0005, -10);
+                        break;
+                    case "100 points":
+                        scottPlot.PlotSignal(hundred_points, .2, -10);
+                        break;
+                    default:
+                        scottPlot.Clear();
+                        break;
+                }
             }
             
             pictureBox1.Image = scottPlot.GetBitmap();

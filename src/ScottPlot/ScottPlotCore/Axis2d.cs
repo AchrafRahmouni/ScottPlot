@@ -23,6 +23,26 @@ namespace ScottPlot
         /// <param name="heightPx">height of the graph image (px)</param>
         public FigureAxis(double xMin, double xMax, double yMin, double yMax, int widthPx, int heightPx)
         {
+            // expand axis to make sure we don't get too crazy small
+            double xCenter = (xMin + xMax) / 2;
+            double yCenter = (yMin + yMax) / 2;
+            double xHalfWidth = xCenter - xMin;
+            double yHalfWidth = yCenter - yMin;
+            double limitHalfWidth = .001;
+            if (xHalfWidth < limitHalfWidth)
+            {
+                xHalfWidth = limitHalfWidth;
+                xMin = xCenter - limitHalfWidth;
+                xMax = xCenter + limitHalfWidth;
+            }
+            if (yHalfWidth < limitHalfWidth)
+            {
+                yHalfWidth = limitHalfWidth;
+                yMin = yCenter - limitHalfWidth;
+                yMax = yCenter + limitHalfWidth;
+            }
+
+            // build each axis with our valid limits
             xAxis = new Axis(xMin, xMax, widthPx);
             yAxis = new Axis(yMin, yMax, heightPx, true);
         }

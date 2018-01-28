@@ -48,7 +48,7 @@ namespace ScottPlot
         public Color PlotColor = Color.Red;
         public Color randomColor { get { return Color.FromArgb(150, rand.Next(200), rand.Next(200), rand.Next(200)); } }
         public int plotLineWidth = 1;
-        public bool show_debug_message = true;
+        public bool show_debug_message = false;
 
         // misc objects useful at the class level
         private Random rand = new Random();
@@ -494,7 +494,7 @@ namespace ScottPlot
                 string msg = "## DEBUG INFORMATION ##";
                 msg += string.Format($"\nFigure size: ({bmpFrame.Width}, {bmpFrame.Height})");
                 msg += string.Format($"\nData size: ({bmpData.Width}, {bmpData.Height})");
-                msg += string.Format($"\nAxis: [%.02f, %.02f, %.02f, %.02f]", axis1.xAxis.min, axis1.xAxis.max, axis1.yAxis.min, axis1.yAxis.max);
+                msg += string.Format("\nAxis: [{0:0.00}, {1:0.00}, {2:0.00}, {3:0.00}]", axis1.xAxis.min, axis1.xAxis.max, axis1.yAxis.min, axis1.yAxis.max);
                 msg += string.Format($"\nMouse Buttons: {(mouse_left_down_axis!=null)}  {(mouse_right_down_axis != null)}");
                 return msg;
             }
@@ -538,18 +538,26 @@ namespace ScottPlot
                                        mouse_left_down_axis.yAxis.min + dY, mouse_left_down_axis.yAxis.max + dY,
                                        mouse_left_down_axis.xAxis.pxSize, mouse_left_down_axis.yAxis.pxSize);
                 Clear();
+                RedrawFrame();
             }
             else if (mouse_right_down_axis != null)
             {
                 // right-click-drag zooming: expand the edges by the same distance of the drag when zooming out, or sqrt(distance) when zooming in.
                 double dX = (mouse_right_down_position.X - mouse_position.X) * mouse_right_down_axis.xAxis.unitsPerPx;
                 double dY = (mouse_position.Y - mouse_right_down_position.Y) * mouse_right_down_axis.yAxis.unitsPerPx;
-                if (dX < 0) dX = -Math.Sqrt(Math.Abs(dX));
-                if (dY < 0) dY = -Math.Sqrt(Math.Abs(dY));
+                if (dX < 0)
+                {
+                    dX = -Math.Sqrt(Math.Abs(dX));
+                }
+                if (dY < 0)
+                {
+                    dY = -Math.Sqrt(Math.Abs(dY));
+                }
                 axis1 = new FigureAxis(mouse_right_down_axis.xAxis.min - dX, mouse_right_down_axis.xAxis.max + dX,
                                        mouse_right_down_axis.yAxis.min - dY, mouse_right_down_axis.yAxis.max + dY,
                                        mouse_right_down_axis.xAxis.pxSize, mouse_right_down_axis.yAxis.pxSize);
                 Clear();
+                RedrawFrame();
             }
         }
 

@@ -31,10 +31,20 @@
             this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel_info = new System.Windows.Forms.Panel();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.flowLayoutPanel3 = new System.Windows.Forms.FlowLayoutPanel();
+            this.btn_zoomIn = new System.Windows.Forms.Button();
+            this.btn_zoomOut = new System.Windows.Forms.Button();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
+            this.btn_NE = new System.Windows.Forms.Button();
+            this.btn_SW = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.btn_draw = new System.Windows.Forms.Button();
+            this.btn_clear = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.btn_clear = new System.Windows.Forms.Button();
-            this.btn_draw = new System.Windows.Forms.Button();
             this.combo_routine = new System.Windows.Forms.ComboBox();
             this.cb_quality = new System.Windows.Forms.CheckBox();
             this.cb_animate = new System.Windows.Forms.CheckBox();
@@ -42,26 +52,16 @@
             this.panel_plot = new System.Windows.Forms.Panel();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.btn_zoomIn = new System.Windows.Forms.Button();
-            this.btn_zoomOut = new System.Windows.Forms.Button();
-            this.btn_NE = new System.Windows.Forms.Button();
-            this.btn_SW = new System.Windows.Forms.Button();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.flowLayoutPanel3 = new System.Windows.Forms.FlowLayoutPanel();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel_info.SuspendLayout();
-            this.panel_plot.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            this.groupBox1.SuspendLayout();
-            this.flowLayoutPanel1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.flowLayoutPanel2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.flowLayoutPanel3.SuspendLayout();
+            this.groupBox2.SuspendLayout();
+            this.flowLayoutPanel2.SuspendLayout();
+            this.groupBox1.SuspendLayout();
+            this.flowLayoutPanel1.SuspendLayout();
+            this.panel_plot.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -76,7 +76,7 @@
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(708, 447);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(708, 567);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // panel_info
@@ -95,6 +95,126 @@
             this.panel_info.Name = "panel_info";
             this.panel_info.Size = new System.Drawing.Size(702, 94);
             this.panel_info.TabIndex = 0;
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.flowLayoutPanel3);
+            this.groupBox3.Location = new System.Drawing.Point(596, 9);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(97, 85);
+            this.groupBox3.TabIndex = 14;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Zoom";
+            // 
+            // flowLayoutPanel3
+            // 
+            this.flowLayoutPanel3.Controls.Add(this.btn_zoomIn);
+            this.flowLayoutPanel3.Controls.Add(this.btn_zoomOut);
+            this.flowLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel3.Location = new System.Drawing.Point(3, 18);
+            this.flowLayoutPanel3.Name = "flowLayoutPanel3";
+            this.flowLayoutPanel3.Size = new System.Drawing.Size(91, 64);
+            this.flowLayoutPanel3.TabIndex = 0;
+            // 
+            // btn_zoomIn
+            // 
+            this.btn_zoomIn.Location = new System.Drawing.Point(3, 3);
+            this.btn_zoomIn.Name = "btn_zoomIn";
+            this.btn_zoomIn.Size = new System.Drawing.Size(75, 24);
+            this.btn_zoomIn.TabIndex = 8;
+            this.btn_zoomIn.Text = "IN";
+            this.btn_zoomIn.UseVisualStyleBackColor = true;
+            this.btn_zoomIn.Click += new System.EventHandler(this.btn_zoomIn_Click);
+            // 
+            // btn_zoomOut
+            // 
+            this.btn_zoomOut.Location = new System.Drawing.Point(3, 33);
+            this.btn_zoomOut.Name = "btn_zoomOut";
+            this.btn_zoomOut.Size = new System.Drawing.Size(75, 24);
+            this.btn_zoomOut.TabIndex = 9;
+            this.btn_zoomOut.Text = "OUT";
+            this.btn_zoomOut.UseVisualStyleBackColor = true;
+            this.btn_zoomOut.Click += new System.EventHandler(this.btn_zoomOut_Click);
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.flowLayoutPanel2);
+            this.groupBox2.Location = new System.Drawing.Point(496, 9);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(97, 85);
+            this.groupBox2.TabIndex = 13;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Pan";
+            // 
+            // flowLayoutPanel2
+            // 
+            this.flowLayoutPanel2.Controls.Add(this.btn_NE);
+            this.flowLayoutPanel2.Controls.Add(this.btn_SW);
+            this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(3, 18);
+            this.flowLayoutPanel2.Name = "flowLayoutPanel2";
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(91, 64);
+            this.flowLayoutPanel2.TabIndex = 0;
+            // 
+            // btn_NE
+            // 
+            this.btn_NE.Location = new System.Drawing.Point(3, 3);
+            this.btn_NE.Name = "btn_NE";
+            this.btn_NE.Size = new System.Drawing.Size(75, 23);
+            this.btn_NE.TabIndex = 10;
+            this.btn_NE.Text = "NE";
+            this.btn_NE.UseVisualStyleBackColor = true;
+            this.btn_NE.Click += new System.EventHandler(this.btn_NE_Click);
+            // 
+            // btn_SW
+            // 
+            this.btn_SW.Location = new System.Drawing.Point(3, 32);
+            this.btn_SW.Name = "btn_SW";
+            this.btn_SW.Size = new System.Drawing.Size(75, 23);
+            this.btn_SW.TabIndex = 11;
+            this.btn_SW.Text = "SW";
+            this.btn_SW.UseVisualStyleBackColor = true;
+            this.btn_SW.Click += new System.EventHandler(this.btn_SW_Click);
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.flowLayoutPanel1);
+            this.groupBox1.Location = new System.Drawing.Point(396, 9);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(97, 85);
+            this.groupBox1.TabIndex = 12;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Plot";
+            // 
+            // flowLayoutPanel1
+            // 
+            this.flowLayoutPanel1.Controls.Add(this.btn_draw);
+            this.flowLayoutPanel1.Controls.Add(this.btn_clear);
+            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 18);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(91, 64);
+            this.flowLayoutPanel1.TabIndex = 0;
+            // 
+            // btn_draw
+            // 
+            this.btn_draw.Location = new System.Drawing.Point(3, 3);
+            this.btn_draw.Name = "btn_draw";
+            this.btn_draw.Size = new System.Drawing.Size(75, 24);
+            this.btn_draw.TabIndex = 4;
+            this.btn_draw.Text = "draw";
+            this.btn_draw.UseVisualStyleBackColor = true;
+            this.btn_draw.Click += new System.EventHandler(this.btn_draw_Click);
+            // 
+            // btn_clear
+            // 
+            this.btn_clear.Location = new System.Drawing.Point(3, 33);
+            this.btn_clear.Name = "btn_clear";
+            this.btn_clear.Size = new System.Drawing.Size(75, 24);
+            this.btn_clear.TabIndex = 5;
+            this.btn_clear.Text = "clear";
+            this.btn_clear.UseVisualStyleBackColor = true;
+            this.btn_clear.Click += new System.EventHandler(this.btn_clear_Click);
             // 
             // label2
             // 
@@ -119,26 +239,6 @@
             this.label1.TabIndex = 6;
             this.label1.Text = "ScottPlot";
             // 
-            // btn_clear
-            // 
-            this.btn_clear.Location = new System.Drawing.Point(3, 33);
-            this.btn_clear.Name = "btn_clear";
-            this.btn_clear.Size = new System.Drawing.Size(75, 24);
-            this.btn_clear.TabIndex = 5;
-            this.btn_clear.Text = "clear";
-            this.btn_clear.UseVisualStyleBackColor = true;
-            this.btn_clear.Click += new System.EventHandler(this.btn_clear_Click);
-            // 
-            // btn_draw
-            // 
-            this.btn_draw.Location = new System.Drawing.Point(3, 3);
-            this.btn_draw.Name = "btn_draw";
-            this.btn_draw.Size = new System.Drawing.Size(75, 24);
-            this.btn_draw.TabIndex = 4;
-            this.btn_draw.Text = "draw";
-            this.btn_draw.UseVisualStyleBackColor = true;
-            this.btn_draw.Click += new System.EventHandler(this.btn_draw_Click);
-            // 
             // combo_routine
             // 
             this.combo_routine.FormattingEnabled = true;
@@ -146,12 +246,13 @@
             "confetti",
             "sine",
             "XY pairs",
-            "1M points"});
+            "1M points",
+            "100 points"});
             this.combo_routine.Location = new System.Drawing.Point(269, 66);
             this.combo_routine.Name = "combo_routine";
             this.combo_routine.Size = new System.Drawing.Size(108, 24);
             this.combo_routine.TabIndex = 3;
-            this.combo_routine.Text = "1M points";
+            this.combo_routine.Text = "100 points";
             this.combo_routine.SelectedIndexChanged += new System.EventHandler(this.combo_routine_SelectedIndexChanged);
             // 
             // cb_quality
@@ -195,7 +296,7 @@
             this.panel_plot.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel_plot.Location = new System.Drawing.Point(3, 103);
             this.panel_plot.Name = "panel_plot";
-            this.panel_plot.Size = new System.Drawing.Size(702, 341);
+            this.panel_plot.Size = new System.Drawing.Size(702, 461);
             this.panel_plot.TabIndex = 1;
             // 
             // pictureBox1
@@ -204,121 +305,25 @@
             this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pictureBox1.Location = new System.Drawing.Point(0, 0);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(700, 339);
+            this.pictureBox1.Size = new System.Drawing.Size(700, 459);
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
             this.pictureBox1.SizeChanged += new System.EventHandler(this.pictureBox1_SizeChanged);
+            this.pictureBox1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseDoubleClick);
+            this.pictureBox1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseDown);
+            this.pictureBox1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseMove);
+            this.pictureBox1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseUp);
             // 
             // timer1
             // 
             this.timer1.Interval = 1;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
-            // btn_zoomIn
-            // 
-            this.btn_zoomIn.Location = new System.Drawing.Point(3, 3);
-            this.btn_zoomIn.Name = "btn_zoomIn";
-            this.btn_zoomIn.Size = new System.Drawing.Size(75, 24);
-            this.btn_zoomIn.TabIndex = 8;
-            this.btn_zoomIn.Text = "IN";
-            this.btn_zoomIn.UseVisualStyleBackColor = true;
-            this.btn_zoomIn.Click += new System.EventHandler(this.btn_zoomIn_Click);
-            // 
-            // btn_zoomOut
-            // 
-            this.btn_zoomOut.Location = new System.Drawing.Point(3, 33);
-            this.btn_zoomOut.Name = "btn_zoomOut";
-            this.btn_zoomOut.Size = new System.Drawing.Size(75, 24);
-            this.btn_zoomOut.TabIndex = 9;
-            this.btn_zoomOut.Text = "OUT";
-            this.btn_zoomOut.UseVisualStyleBackColor = true;
-            this.btn_zoomOut.Click += new System.EventHandler(this.btn_zoomOut_Click);
-            // 
-            // btn_NE
-            // 
-            this.btn_NE.Location = new System.Drawing.Point(3, 3);
-            this.btn_NE.Name = "btn_NE";
-            this.btn_NE.Size = new System.Drawing.Size(75, 23);
-            this.btn_NE.TabIndex = 10;
-            this.btn_NE.Text = "NE";
-            this.btn_NE.UseVisualStyleBackColor = true;
-            this.btn_NE.Click += new System.EventHandler(this.btn_NE_Click);
-            // 
-            // btn_SW
-            // 
-            this.btn_SW.Location = new System.Drawing.Point(3, 32);
-            this.btn_SW.Name = "btn_SW";
-            this.btn_SW.Size = new System.Drawing.Size(75, 23);
-            this.btn_SW.TabIndex = 11;
-            this.btn_SW.Text = "SW";
-            this.btn_SW.UseVisualStyleBackColor = true;
-            this.btn_SW.Click += new System.EventHandler(this.btn_SW_Click);
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.flowLayoutPanel1);
-            this.groupBox1.Location = new System.Drawing.Point(396, 9);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(97, 85);
-            this.groupBox1.TabIndex = 12;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Plot";
-            // 
-            // flowLayoutPanel1
-            // 
-            this.flowLayoutPanel1.Controls.Add(this.btn_draw);
-            this.flowLayoutPanel1.Controls.Add(this.btn_clear);
-            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 18);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(91, 64);
-            this.flowLayoutPanel1.TabIndex = 0;
-            // 
-            // groupBox2
-            // 
-            this.groupBox2.Controls.Add(this.flowLayoutPanel2);
-            this.groupBox2.Location = new System.Drawing.Point(496, 9);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(97, 85);
-            this.groupBox2.TabIndex = 13;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Pan";
-            // 
-            // flowLayoutPanel2
-            // 
-            this.flowLayoutPanel2.Controls.Add(this.btn_NE);
-            this.flowLayoutPanel2.Controls.Add(this.btn_SW);
-            this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel2.Location = new System.Drawing.Point(3, 18);
-            this.flowLayoutPanel2.Name = "flowLayoutPanel2";
-            this.flowLayoutPanel2.Size = new System.Drawing.Size(91, 64);
-            this.flowLayoutPanel2.TabIndex = 0;
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.Controls.Add(this.flowLayoutPanel3);
-            this.groupBox3.Location = new System.Drawing.Point(596, 9);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(97, 85);
-            this.groupBox3.TabIndex = 14;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Zoom";
-            // 
-            // flowLayoutPanel3
-            // 
-            this.flowLayoutPanel3.Controls.Add(this.btn_zoomIn);
-            this.flowLayoutPanel3.Controls.Add(this.btn_zoomOut);
-            this.flowLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel3.Location = new System.Drawing.Point(3, 18);
-            this.flowLayoutPanel3.Name = "flowLayoutPanel3";
-            this.flowLayoutPanel3.Size = new System.Drawing.Size(91, 64);
-            this.flowLayoutPanel3.TabIndex = 0;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(708, 447);
+            this.ClientSize = new System.Drawing.Size(708, 567);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "Form1";
             this.Text = "Form1";
@@ -326,14 +331,14 @@
             this.tableLayoutPanel1.ResumeLayout(false);
             this.panel_info.ResumeLayout(false);
             this.panel_info.PerformLayout();
-            this.panel_plot.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
-            this.groupBox1.ResumeLayout(false);
-            this.flowLayoutPanel1.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
-            this.flowLayoutPanel2.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
             this.flowLayoutPanel3.ResumeLayout(false);
+            this.groupBox2.ResumeLayout(false);
+            this.flowLayoutPanel2.ResumeLayout(false);
+            this.groupBox1.ResumeLayout(false);
+            this.flowLayoutPanel1.ResumeLayout(false);
+            this.panel_plot.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 
         }

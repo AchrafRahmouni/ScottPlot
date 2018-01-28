@@ -48,7 +48,8 @@ namespace ScottPlot
         public Color PlotColor = Color.Red;
         public Color randomColor { get { return Color.FromArgb(150, rand.Next(200), rand.Next(200), rand.Next(200)); } }
         public int plotLineWidth = 1;
-        
+        public bool show_debug_message = true;
+
         // misc objects useful at the class level
         private Random rand = new Random();
 
@@ -62,9 +63,9 @@ namespace ScottPlot
             SetPad(50,5,20,50); // default padding
             SetSize(width, height); // create bitmaps (depending on paddding)
             Axis(-10, 10, -10, 10); // default axis (pixel scaling based on data bitmap size)
-            RerawFrame();
+            RedrawFrame();
         }
-        
+
         /// <summary>
         /// Set this to adjust the quality/speed balance. This influences the frame and the data.
         /// </summary>
@@ -97,15 +98,17 @@ namespace ScottPlot
         /// <param name="x2">right (units)</param>
         /// <param name="y1">bottom (units)</param>
         /// <param name="y2">top (units)</param>
-        public void Axis(double? x1=null, double? x2 = null, double? y1 = null, double? y2 = null)
+        public FigureAxis Axis(double? x1=null, double? x2 = null, double? y1 = null, double? y2 = null)
         {
             if (x1 == null) x1 = axis1.xAxis.min;
             if (x2 == null) x2 = axis1.xAxis.max;
             if (y1 == null) y1 = axis1.yAxis.min;
             if (y2 == null) y2 = axis1.yAxis.max;
             this.axis1 = new FigureAxis((double)x1, (double)x2, (double)y1, (double)y2, bmpData.Width, bmpData.Height);
+            return this.axis1;
         }
-        
+
+
         /// <summary>
         /// Get the bitmap of the final image (axis + data)
         /// </summary>
@@ -115,6 +118,16 @@ namespace ScottPlot
             Bitmap bmpMerged = new Bitmap(bmpFrame);
             Graphics gfx = Graphics.FromImage(bmpMerged);
             gfx.DrawImage(bmpData, new Point(padL, padT));
+
+            if (show_debug_message)
+            {
+                Font font = new Font("courier new", 11, FontStyle.Regular);
+                var shp = gfx.MeasureString(debug_message, font);
+                gfx.FillRectangle(new SolidBrush(Color.FromArgb(128,0,0,0)),new Rectangle(padL, padT, (int)shp.Width, (int)shp.Height));
+                gfx.DrawString(debug_message, font, new SolidBrush(Color.Black), new Point(padL+1, padT+1));
+                gfx.DrawString(debug_message, font, new SolidBrush(Color.White), new Point(padL, padT));
+            }
+
             return bmpMerged;
         }
 
@@ -131,7 +144,7 @@ namespace ScottPlot
             this.padR = right;
             this.padB = bottom;
             this.padT = top;
-            RerawFrame();
+            RedrawFrame();
         }
 
         /// <summary>
@@ -152,7 +165,7 @@ namespace ScottPlot
             // since we reset the graphics, we should re-set the aliasing mode
             antiAlias=_antiAlias;
 
-            RerawFrame();
+            RedrawFrame();
         }
 
         /// <summary>
@@ -164,7 +177,7 @@ namespace ScottPlot
         }
 
 
-        public void RerawFrame()
+        public void RedrawFrame()
         {
             if (gfxFrame == null || gfxData == null || axis1 == null) return;
 
@@ -255,7 +268,7 @@ namespace ScottPlot
         {
             if (xFrac != null) axis1.xAxis.Zoom((double)xFrac);
             if (yFrac != null) axis1.yAxis.Zoom((double)yFrac);
-            if (xFrac != null || yFrac != null) RerawFrame();
+            if (xFrac != null || yFrac != null) RedrawFrame();
         }
 
         /// <summary>
@@ -267,12 +280,100 @@ namespace ScottPlot
         {
             if (xShift != null) axis1.xAxis.Pan((double)xShift);
             if (yShift != null) axis1.yAxis.Pan((double)yShift);
-            if (xShift != null || yShift != null) RerawFrame();
+            if (xShift != null || yShift != null) RedrawFrame();
+        }
+        
+
+        /// <summary>
+        /// Plot a series of arbitrarily-spaced (X,Y) data points.
+        /// </summary>
+        /// <param name="Xs"></param>
+        /// <param name="Ys"></param>
+        public void PlotLineXY(double[] Xs, double[] Ys)
+        {
+            int pointCount = Math.Min(Xs.Length, Ys.Length);
+            Point[] points = new Point[pointCount];
+
+            for (int i = 0; i < pointCount; i++)
+            {
+                int xPx = axis1.xAxis.UnitToPx(Xs[i]);
+                int yPx = axis1.yAxis.UnitToPx(Ys[i]);
+                points[i] = new Point(xPx, yPx);
+            }
+
+            Pen pen = new Pen(new SolidBrush(PlotColor), plotLineWidth);
+            gfxData.DrawLines(pen, points);
         }
 
+        /// <summary>
+        /// Highspeed plotting of evenly spaced data.
+        /// </summary>
+        /// <param name="Ys">input data (y-axis units)</param>
+        /// <param name="pointSpacing">distance between each data point (x-axis units)</param>
+        /// <param name="firstPointX">the X point where this Y data starts (x-axis units)</param>
+        /// <param name="offsetY">offset the data by this value (y-axis units)</param>
+        public void PlotSignal(List<double> Ys, double pointSpacing = 1.0 / 1000, double firstPointX = 0, double offsetY = 0)
+        {
+
+            //TODO: make this run entirely on arrays, not lists.
+
+            List<Point> points = new List<Point>();
+            double dataPointsPerPixel = axis1.xAxis.unitsPerPx / pointSpacing;
+            double pixelsPerDataPoint = pointSpacing / axis1.xAxis.unitsPerPx;
+
+            // horizontal data density is greater than pixel density, so bin to the pixel size and plot min/max of each bin
+
+            double lastPointX = firstPointX + Ys.Count() * pointSpacing;
+            double binUnitsPerPx = axis1.xAxis.unitsPerPx / pointSpacing;
+            int dataMinPx = (int)((firstPointX - axis1.xAxis.min) / axis1.xAxis.unitsPerPx);
+            int dataMaxPx = (int)((lastPointX - axis1.xAxis.min) / axis1.xAxis.unitsPerPx);
 
 
+            if (dataPointsPerPixel < 1)
+            {
+                // data density < pixel density, so plot X/Y pairs
+                int iLeftSide = (int)(((axis1.xAxis.min - firstPointX) / axis1.xAxis.unitsPerPx) * dataPointsPerPixel);
+                int iRightSide = iLeftSide + (int)(dataPointsPerPixel * bmpData.Width);
+                for (int i = Math.Max(0, iLeftSide - 2); i < Math.Min(iRightSide + 3, Ys.Count - 1); i++)
+                {
+                    int xPx = axis1.xAxis.UnitToPx((double)i * pointSpacing + firstPointX);
+                    int yPx = axis1.yAxis.UnitToPx(Ys[i]);
+                    points.Add(new Point(xPx, yPx));
+                }
+            }
+            else
+            {
+                // data density > pixel density, so bin data to pixel size and plot bin min/max
+                for (int xPixel = Math.Max(0, dataMinPx); xPixel < Math.Min(bmpData.Width, dataMaxPx); xPixel++)
+                {
+                    int iLeft = (int)(binUnitsPerPx * (xPixel - dataMinPx));
+                    int iRight = (int)(iLeft + binUnitsPerPx);
+                    iLeft = Math.Max(iLeft, 0);
+                    iRight = Math.Min(Ys.Count - 1, iRight);
+                    iRight = Math.Max(iRight, 0);
+                    if (iLeft == iRight) continue;
+                    double yPxMin = Ys.GetRange(iLeft, iRight - iLeft).Min() + offsetY;
+                    double yPxMax = Ys.GetRange(iLeft, iRight - iLeft).Max() + offsetY;
+                    points.Add(new Point(xPixel, axis1.yAxis.UnitToPx(yPxMin)));
+                    points.Add(new Point(xPixel, axis1.yAxis.UnitToPx(yPxMax)));
+                }
+            }
 
+            // perform the plot
+            Point[] points2 = points.ToArray();
+            if (points.Count > 1) gfxData.DrawLines(new Pen(PlotColor, plotLineWidth), points2);
+            if (dataPointsPerPixel < .2)
+            {
+                // density is less than one point per pixel, so show point markers
+                int pointSize = 1;
+                foreach (Point point in points)
+                {
+                    Rectangle rect = new Rectangle(point.X - pointSize / 2, point.Y - pointSize / 2, pointSize, pointSize);
+                    gfxData.DrawEllipse(new Pen(PlotColor, 3), rect);
+                }
+            }
+
+        }
 
 
 
@@ -385,85 +486,79 @@ namespace ScottPlot
 
 
 
-
-
-
-
-        public void PlotLineXY(double[] Xs, double[] Ys)
+        
+        public string debug_message
         {
-            int pointCount = Math.Min(Xs.Length, Ys.Length);
-            Point[] points = new Point[pointCount];
-
-            for (int i=0; i < pointCount; i++)
+            get
             {
-                int xPx = axis1.xAxis.UnitToPx(Xs[i]);
-                int yPx = axis1.yAxis.UnitToPx(Ys[i]);
-                points[i] = new Point(xPx, yPx);
+                string msg = "## DEBUG INFORMATION ##";
+                msg += string.Format($"\nFigure size: ({bmpFrame.Width}, {bmpFrame.Height})");
+                msg += string.Format($"\nData size: ({bmpData.Width}, {bmpData.Height})");
+                msg += string.Format($"\nAxis: [%.02f, %.02f, %.02f, %.02f]", axis1.xAxis.min, axis1.xAxis.max, axis1.yAxis.min, axis1.yAxis.max);
+                msg += string.Format($"\nMouse Buttons: {(mouse_left_down_axis!=null)}  {(mouse_right_down_axis != null)}");
+                return msg;
             }
-
-            Pen pen = new Pen(new SolidBrush(PlotColor), plotLineWidth);
-            gfxData.DrawLines(pen, points);
         }
 
-        public void PlotSignal(List<double> Ys, double pointSpacing = 1.0/1000, double firstPointX = 0, double offsetY = 0)
+        public FigureAxis mouse_left_down_axis = null;
+        public FigureAxis mouse_right_down_axis = null;
+        public Point mouse_left_down_position;
+        public Point mouse_right_down_position;
+
+        public void Mouse_left_down(Point mouse_position)
         {
-
-            //TODO: make this run entirely on arrays, not lists.
-
-            List<Point> points = new List<Point>();
-            double dataPointsPerPixel = axis1.xAxis.unitsPerPx / pointSpacing;
-            double pixelsPerDataPoint = pointSpacing / axis1.xAxis.unitsPerPx;
-
-            // horizontal data density is greater than pixel density, so bin to the pixel size and plot min/max of each bin
-
-            double lastPointX = firstPointX + Ys.Count() * pointSpacing;
-            double binUnitsPerPx = axis1.xAxis.unitsPerPx / pointSpacing;
-            int dataMinPx = (int)((firstPointX - axis1.xAxis.min) / axis1.xAxis.unitsPerPx);
-            int dataMaxPx = (int)((lastPointX - axis1.xAxis.min) / axis1.xAxis.unitsPerPx);
-
-
-            if (dataPointsPerPixel < 1)
-            {
-                // data density < pixel density, so plot X/Y pairs
-                int iLeftSide = (int)(((axis1.xAxis.min - firstPointX) / axis1.xAxis.unitsPerPx) * dataPointsPerPixel);
-                int iRightSide = iLeftSide+(int)(dataPointsPerPixel * bmpData.Width);
-                for (int i= Math.Max(0, iLeftSide-2); i < Math.Min(iRightSide+2, Ys.Count - 1); i++)
-                {
-                    int xPx = axis1.xAxis.UnitToPx((double)i * pointSpacing - firstPointX);
-                    int yPx = axis1.yAxis.UnitToPx(Ys[i]);
-                    points.Add(new Point(xPx, yPx));
-                }
-            }
-            else
-            {
-                // data density > pixel density, so bin data to pixel size and plot bin min/max
-                for (int xPixel = Math.Max(0, dataMinPx); xPixel < Math.Min(bmpData.Width, dataMaxPx); xPixel++)
-                {
-                    int iLeft = (int)(binUnitsPerPx * (xPixel - dataMinPx));
-                    int iRight = (int)(iLeft + binUnitsPerPx);
-
-                    double yPxMin = Ys.GetRange(iLeft, iRight - iLeft).Min() + offsetY;
-                    double yPxMax = Ys.GetRange(iLeft, iRight - iLeft).Max() + offsetY;
-                    points.Add(new Point(xPixel, axis1.yAxis.UnitToPx(yPxMin)));
-                    points.Add(new Point(xPixel, axis1.yAxis.UnitToPx(yPxMax)));
-                }
-            }
-
-            
-            // perform the plot
-            if (points.Count > 1) gfxData.DrawLines(new Pen(PlotColor, plotLineWidth), points.ToArray());
-            if (dataPointsPerPixel < 1)
-            {
-                // density is less than one point per pixel, so show point markers
-                int pointSize = 1;
-                foreach (Point point in points)
-                {
-                    Rectangle rect = new Rectangle(point.X - pointSize/2, point.Y - pointSize/2, pointSize, pointSize);
-                    gfxData.DrawEllipse(new Pen(PlotColor, 3), rect);
-                }
-            }
-
+            mouse_left_down_position = mouse_position;
+            mouse_left_down_axis = new FigureAxis(axis1.xAxis.min, axis1.xAxis.max, axis1.yAxis.min, axis1.yAxis.max, axis1.xAxis.pxSize, axis1.yAxis.pxSize);
         }
+
+        public void Mouse_right_down(Point mouse_position)
+        {
+            mouse_right_down_position = mouse_position;
+            mouse_right_down_axis = new FigureAxis(axis1.xAxis.min, axis1.xAxis.max, axis1.yAxis.min, axis1.yAxis.max, axis1.xAxis.pxSize, axis1.yAxis.pxSize);
+        }
+
+        public void Mouse_left_up(Point mouse_position)
+        {
+            mouse_left_down_axis = null;
+        }
+
+        public void Mouse_right_up(Point mouse_position)
+        {
+            mouse_right_down_axis = null;
+        }
+
+        public void Mouse_move(Point mouse_position)
+        {
+            if (mouse_left_down_axis != null)
+            {
+                double dX = mouse_left_down_position.X - mouse_position.X;
+                double dY = mouse_position.Y - mouse_left_down_position.Y;
+                dX *= axis1.xAxis.unitsPerPx;
+                dY *= axis1.yAxis.unitsPerPx;
+                axis1 = new FigureAxis(mouse_left_down_axis.xAxis.min + dX, mouse_left_down_axis.xAxis.max + dX,
+                                       mouse_left_down_axis.yAxis.min + dY, mouse_left_down_axis.yAxis.max + dY,
+                                       mouse_left_down_axis.xAxis.pxSize, mouse_left_down_axis.yAxis.pxSize);
+                Clear();
+            }
+            else if (mouse_right_down_axis != null)
+            {
+                //TODO: why is this so bad???
+                double dX = mouse_right_down_position.X - mouse_position.X;
+                double dY = mouse_position.Y - mouse_right_down_position.Y;
+                Console.WriteLine($"{dX}, {dY}");
+                if (dX > 0) dX = Math.Sqrt(50.0 * Math.Abs(dX) * Math.Pow(.02, Math.Abs(dX) / 10000.0)) * dX / Math.Abs(dX);
+                if (dY < 0) dY = Math.Sqrt(50.0 * Math.Abs(dY) * Math.Pow(.02, Math.Abs(dY) / 10000.0)) * dY / Math.Abs(dY);
+                dX *= axis1.xAxis.unitsPerPx;
+                dY *= axis1.yAxis.unitsPerPx;
+                axis1 = new FigureAxis(mouse_right_down_axis.xAxis.min-dX, mouse_right_down_axis.xAxis.max+dX,
+                                       mouse_right_down_axis.yAxis.min-dY, mouse_right_down_axis.yAxis.max+dY,
+                                       mouse_right_down_axis.xAxis.pxSize, mouse_right_down_axis.yAxis.pxSize);
+                Clear();
+            }
+        }
+
+
+
 
 
 

@@ -16,24 +16,25 @@ namespace ScottPlot
     {
         private ScottPlot scottPlot;
         private List<double> million_points;
+        private List<double> hundred_points;
         public Form1()
         {
             InitializeComponent();
 
             // pre-populate a large dataset we can graph later
             million_points = new List<double>();
-            for (int i = 0; i < 1e6; i++)
-            {
-                million_points.Add(Math.Sin((double)i / 1000.0));
-            }
+            for (int i = 0; i < 1e6; i++) million_points.Add(5.0 * Math.Sin((double)i / 1000.0));
+            hundred_points = new List<double>();
+            for (int i = 0; i < 100; i++) hundred_points.Add(5.0 * Math.Sin((double)i / 5.0));
         }
 
         private void Form1_Shown(object sender, EventArgs e)
         {
             scottPlot = new ScottPlot(pictureBox1.Width, pictureBox1.Height);
-            pictureBox1.Image = scottPlot.GetBitmap();
+            RedrawEverything();
         }
 
+        
         private void RedrawEverything()
         {
             if (scottPlot == null) return;
@@ -52,7 +53,10 @@ namespace ScottPlot
                     scottPlot.PlotDemoXY();
                     break;
                 case "1M points":
-                    scottPlot.PlotSignal(million_points);
+                    scottPlot.PlotSignal(million_points,.0005,-10);
+                    break;
+                case "100 points":
+                    scottPlot.PlotSignal(hundred_points, .2, -10);
                     break;
                 default:
                     scottPlot.Clear();
@@ -132,5 +136,35 @@ namespace ScottPlot
             scottPlot.Pan(-.5, -.5);
             RedrawEverything();
         }
+
+        private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left) scottPlot.Mouse_left_down(new Point(Cursor.Position.X, Cursor.Position.Y));
+            if (e.Button == MouseButtons.Right) scottPlot.Mouse_right_down(new Point(Cursor.Position.X, Cursor.Position.Y));
+            timer1.Enabled = true;
+        }
+
+        private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button==MouseButtons.Left) scottPlot.Mouse_left_up(new Point(Cursor.Position.X, Cursor.Position.Y));
+            if (e.Button == MouseButtons.Right) scottPlot.Mouse_right_up(new Point(Cursor.Position.X, Cursor.Position.Y));
+            timer1.Enabled = true;
+        }
+
+        private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (scottPlot.mouse_left_down_axis != null || scottPlot.mouse_right_down_axis != null)
+            {
+                scottPlot.Mouse_move(new Point(Cursor.Position.X, Cursor.Position.Y));
+                timer1.Enabled = true;
+            }
+        }
+
+        private void pictureBox1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            scottPlot.show_debug_message = !scottPlot.show_debug_message;
+            timer1.Enabled = true;
+        }
     }
 }
+

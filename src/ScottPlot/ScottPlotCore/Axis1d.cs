@@ -69,15 +69,16 @@ namespace ScottPlot
         }
 
         /// <summary>
-        /// Zoom in on the center of Axis by a fraction. &lt;1 zooms out, &gt; zooms in.
+        /// Zoom in on the center of Axis by a fraction. 
+        /// Below 1 zooms in, above 1 zooms out.
         /// </summary>
-        /// <param name="fracX">Fractional amount to zoom</param>
-        public void Zoom(double fracX)
+        /// <param name="zoomFrac">Fractional amount to zoom</param>
+        public void Zoom(double zoomFrac)
         {
-            double center = (min + max) / 2;
-            double halfPad = center - min;
-            min = center - halfPad * fracX;
-            max = center + halfPad * fracX;
+            double viewCenter = (min + max) / 2;
+            double halfPad = viewCenter - min;
+            min = (double)viewCenter - halfPad * zoomFrac;
+            max = (double)viewCenter + halfPad * zoomFrac;
             RecalculateScale();
         }
 

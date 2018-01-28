@@ -21,7 +21,7 @@ namespace ScottPlot
     class ScottPlot
     {
         // axes
-        FigureAxis axis;
+        private FigureAxis axis1;
 
         // bitmap and graphics
         private Bitmap bmpFrame;
@@ -31,12 +31,24 @@ namespace ScottPlot
 
         // settings stored internally
         private int padL, padR, padT, padB;
+        private bool _antiAlias = false;
 
-        // settings which can be adjusted
+        // frame settings which can be adjusted
         public Color color_figure_background = Color.LightGray;
         public Color color_axis_labels = Color.Black;
         public Color color_plot_background = Color.White;
+        public Color color_grid = Color.LightGray;
 
+        // marker settings
+        public enum markerShape { circle, x, plus, ring };
+        public markerShape plotMarkerShape = markerShape.circle;
+        public int plotMarkerSize = 3;
+
+        // plot settings
+        public Color PlotColor = Color.Red;
+        public Color randomColor { get { return Color.FromArgb(150, rand.Next(200), rand.Next(200), rand.Next(200)); } }
+        public int plotLineWidth = 1;
+        
         // misc objects useful at the class level
         private Random rand = new Random();
 
@@ -52,7 +64,7 @@ namespace ScottPlot
             Axis(-10, 10, -10, 10); // default axis (pixel scaling based on data bitmap size)
             RerawFrame();
         }
-
+        
         /// <summary>
         /// Set this to adjust the quality/speed balance. This influences the frame and the data.
         /// </summary>
@@ -64,37 +76,19 @@ namespace ScottPlot
                 {
                     gfxFrame.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                     gfxData.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    _antiAlias = true;
                 } else
                 {
                     gfxFrame.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;
                     gfxData.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;
-                }
-            }
-        }
-
-        /*
-        public bool antiAlias
-        {
-            set
-            {
-                this.antiAlias = value;
-                /*
-                if (this.antiAlias == true)
-                {
-                    gfxFrame.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                    gfxData.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                } else
-                {
-                    gfxFrame.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;
-                    gfxData.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;
+                    _antiAlias = false;
                 }
             }
             get
             {
-                return antiAlias;
+                return _antiAlias;
             }
         }
-        */
 
         /// <summary>
         /// Resize the axis (view area)
@@ -105,11 +99,11 @@ namespace ScottPlot
         /// <param name="y2">top (units)</param>
         public void Axis(double? x1=null, double? x2 = null, double? y1 = null, double? y2 = null)
         {
-            if (x1 == null) x1 = axis.xAxis.min;
-            if (x2 == null) x2 = axis.xAxis.max;
-            if (y1 == null) y1 = axis.yAxis.min;
-            if (y2 == null) y2 = axis.yAxis.max;
-            axis = new FigureAxis((double)x1, (double)x2, (double)y1, (double)y2, bmpData.Width, bmpData.Height);
+            if (x1 == null) x1 = axis1.xAxis.min;
+            if (x2 == null) x2 = axis1.xAxis.max;
+            if (y1 == null) y1 = axis1.yAxis.min;
+            if (y2 == null) y2 = axis1.yAxis.max;
+            this.axis1 = new FigureAxis((double)x1, (double)x2, (double)y1, (double)y2, bmpData.Width, bmpData.Height);
         }
         
         /// <summary>
@@ -149,10 +143,15 @@ namespace ScottPlot
         {
             bmpFrame = new Bitmap(Math.Max(1, width), Math.Max(1, height));
             gfxFrame = Graphics.FromImage(bmpFrame);
+
             int dataWidth = width - padR - padL;
             int dataHeight = height - padT - padB;
             bmpData = new Bitmap(Math.Max(1,dataWidth), Math.Max(1, dataHeight));
             gfxData = Graphics.FromImage(bmpData);
+
+            // since we reset the graphics, we should re-set the aliasing mode
+            antiAlias=_antiAlias;
+
             RerawFrame();
         }
 
@@ -165,6 +164,111 @@ namespace ScottPlot
         }
 
 
+        public void RerawFrame()
+        {
+            if (gfxFrame == null || gfxData == null || axis1 == null) return;
+
+            Clear();
+            gfxFrame.Clear(color_figure_background);
+
+            // prepare drawing objects
+            Pen pen_axis = new Pen(color_axis_labels);
+            Pen pen_grid = new Pen(color_grid) { DashPattern = new float[] { 4, 4 } };
+
+            // prepare fonts
+            Font font_axis_labels = new Font("arial", 9, FontStyle.Regular);
+            StringFormat sf_center = new StringFormat();
+            sf_center.Alignment = StringAlignment.Center;
+            StringFormat sf_right = new StringFormat();
+            sf_right.Alignment = StringAlignment.Far;
+
+            // fill the data area and draw a rectangle around it
+            Rectangle dataArea = new Rectangle(padL - 1, padT - 1, bmpFrame.Width - padL - padR + 1, bmpFrame.Height - padT - padB + 1);
+            gfxFrame.FillRectangle(new SolidBrush(color_plot_background), dataArea);
+            gfxFrame.DrawRectangle(pen_axis, dataArea);
+
+            // re-derive axis scaling from bitmap size
+            Axis();
+
+            // tick settings
+            double tick_density_x = bmpData.Width / 100;
+            double tick_density_y = bmpData.Height / 175;
+            int tick_size_major = 5;
+            int tick_size_minor = 2;
+            int dataT = padT;
+            int dataB = padT + bmpData.Height;
+            int dataL = padL;
+            int dataR = padL + bmpData.Width;
+
+            // minor ticks
+            foreach (Tick tick in axis1.xAxis.Ticks((int)(tick_density_x * 5)))
+            {
+                gfxFrame.DrawLine(pen_axis, new Point(dataL + tick.pixel, dataB), new Point(dataL + tick.pixel, dataB + tick_size_minor));
+            }
+            foreach (Tick tick in axis1.yAxis.Ticks((int)(tick_density_y * 5)))
+            {
+                gfxFrame.DrawLine(pen_axis, new Point(dataL - 1, dataT + tick.pixel), new Point(dataL - 1 - tick_size_minor, dataT + tick.pixel));
+            }
+
+            // major ticks
+            foreach (Tick tick in axis1.xAxis.Ticks((int)(tick_density_x)))
+            {
+                gfxFrame.DrawLine(pen_grid, new Point(dataL + tick.pixel, dataT), new Point(dataL + tick.pixel, dataB - 1));
+                gfxFrame.DrawLine(pen_axis, new Point(dataL + tick.pixel, dataB), new Point(dataL + tick.pixel, dataB + tick_size_major));
+                gfxFrame.DrawString(tick.label, font_axis_labels, new SolidBrush(color_axis_labels), new Point(dataL + tick.pixel, dataB + 8), sf_center);
+            }
+            foreach (Tick tick in axis1.yAxis.Ticks((int)(tick_density_y * 5)))
+            {
+                gfxFrame.DrawLine(pen_grid, new Point(dataL, dataT + tick.pixel), new Point(dataR - tick_size_major, dataT + tick.pixel));
+                gfxFrame.DrawLine(pen_axis, new Point(dataL - 1, dataT + tick.pixel), new Point(dataL - 1 - tick_size_major, dataT + tick.pixel));
+                gfxFrame.DrawString(tick.label, font_axis_labels, new SolidBrush(color_axis_labels), new Point(dataL - 7, dataT + tick.pixel - 8), sf_right);
+            }
+
+        }
+
+
+        /// <summary>
+        /// Format a number for a tick label by limiting its precision.
+        /// </summary>
+        /// <param name="value">tick position</param>
+        /// <param name="axisSpan">range of the axis in units (not pixels)</param>
+        /// <returns>formatted tick label</returns>
+        private string TickLabelFormat(double value, double axisSpan)
+        {
+            if (axisSpan < .01) return string.Format("{0:0.0000}", value);
+            if (axisSpan < .1) return string.Format("{0:0.000}", value);
+            if (axisSpan < 1) return string.Format("{0:0.00}", value);
+            if (axisSpan < 10) return string.Format("{0:0.0}", value);
+            return string.Format("{0:0}", value);
+        }
+
+
+
+
+        /// <summary>
+        /// Zoom by a fraction on the center of an axis.
+        /// Values below 1 zoom in, those above 1 zoom out.
+        /// </summary>
+        /// <param name="xFrac">horizontal zoom fraction</param>
+        /// <param name="yFrac">vertical zoom fraction</param>
+        public void Zoom(double? xFrac, double? yFrac)
+        {
+            if (xFrac != null) axis1.xAxis.Zoom((double)xFrac);
+            if (yFrac != null) axis1.yAxis.Zoom((double)yFrac);
+            if (xFrac != null || yFrac != null) RerawFrame();
+        }
+
+        /// <summary>
+        /// Shift the axis horizontally and/or vertically with no change in zoom.
+        /// </summary>
+        /// <param name="xShift"></param>
+        /// <param name="yShift"></param>
+        public void Pan(double? xShift, double? yShift)
+        {
+            if (xShift != null) axis1.xAxis.Pan((double)xShift);
+            if (yShift != null) axis1.yAxis.Pan((double)yShift);
+            if (xShift != null || yShift != null) RerawFrame();
+        }
 
 
 
@@ -172,6 +276,90 @@ namespace ScottPlot
 
 
 
+
+
+
+
+        /*
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         *          DEMOS
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         */
+
+
+
+
+
+
+
+
+
+
+        /// <summary>
+        /// demo: random size and color lines
+        /// </summary>
+        public void PlotDemoConfetti(int pieces = 100, int length = 20)
+        {
+            while (pieces-- > 0)
+            {
+                Point p1 = new Point(rand.Next(bmpData.Width), rand.Next(bmpData.Height));
+                Point p2 = new Point(p1.X + rand.Next(length), p1.Y + rand.Next(length));
+                Pen pen = new Pen(new SolidBrush(Color.FromArgb(150, rand.Next(200), rand.Next(200), rand.Next(200))), 10);
+                gfxData.DrawLine(pen, p1, p2);
+            }
+        }
+
+        /// <summary>
+        /// demo: a time-dependent sine wave the same dimensions as the data window
+        /// </summary>
+        public void PlotDemoSine()
+        {
+            double shiftX = rand.NextDouble() * bmpData.Width;
+            double freq = 2 + rand.Next(20);
+            double amplitude = 20 + rand.Next(bmpData.Height / 2);
+            double offset = rand.Next(bmpData.Height);
+            Point[] points = new Point[bmpData.Width];
+
+            for (int i = 0; i < bmpData.Width; i++)
+            {
+                double y = Math.Sin(shiftX + (double)i * freq / bmpData.Width) * amplitude + offset;
+                points[i] = new Point(i, (int)y);
+            }
+
+            Pen pen = new Pen(new SolidBrush(Color.FromArgb(150, rand.Next(200), rand.Next(200), rand.Next(200))), 5);
+            gfxData.DrawLines(pen, points);
+        }
+
+        public void PlotDemoXY()
+        {
+            List<double> Xs = new List<double>();
+            List<double> Ys = new List<double>();
+
+            Xs.Add(-11);
+            Ys.Add(rand.NextDouble() * 10 - 5);
+
+            while (Xs[Xs.Count() - 1] < 10)
+            {
+                Xs.Add(Xs[Xs.Count() - 1] + rand.NextDouble() + .1);
+                Ys.Add(Ys[Ys.Count() - 1] + rand.NextDouble() - .5);
+            }
+
+            PlotColor = randomColor;
+            plotLineWidth = rand.Next(10) + 1;
+            PlotLineXY(Xs.ToArray(), Ys.ToArray());
+        }
 
 
 
@@ -196,120 +384,93 @@ namespace ScottPlot
          */
 
 
-        private Color color_grid = Color.LightGray;
 
-        public void RerawFrame()
+
+
+
+
+        public void PlotLineXY(double[] Xs, double[] Ys)
         {
-            if (gfxFrame == null || gfxData == null || axis == null) return;
-            
-            Clear();
-            gfxFrame.Clear(color_figure_background);
+            int pointCount = Math.Min(Xs.Length, Ys.Length);
+            Point[] points = new Point[pointCount];
 
-            // prepare drawing objects
-            Pen pen_axis = new Pen(color_axis_labels);
-            Pen pen_grid = new Pen(color_grid) {DashPattern = new float[] { 4, 4 }};
-
-            // prepare fonts
-            Font font_axis_labels = new Font("arial", 9, FontStyle.Regular);
-            StringFormat sf_center = new StringFormat();
-            sf_center.Alignment = StringAlignment.Center;
-            StringFormat sf_right = new StringFormat();
-            sf_right.Alignment = StringAlignment.Far;
-
-            // fill the data area and draw a rectangle around it
-            Rectangle dataArea = new Rectangle(padL - 1, padT - 1, bmpFrame.Width - padL - padR + 1, bmpFrame.Height - padT - padB + 1);
-            gfxFrame.FillRectangle(new SolidBrush(color_plot_background), dataArea);
-            gfxFrame.DrawRectangle(pen_axis, dataArea);
-            
-            // re-derive axis scaling from bitmap size
-            Axis();
-
-            // tick settings
-            double tick_density_x = bmpData.Width / 100;
-            double tick_density_y = bmpData.Height / 150;
-            int tick_size_major = 5;
-            int tick_size_minor = 2;
-            int dataT = padT;
-            int dataB = padT + bmpData.Height;
-            int dataL = padL;
-            int dataR = padL + bmpData.Width;
-
-            // minor ticks
-            foreach (Tick tick in axis.xAxis.Ticks((int)(tick_density_x*5)))
+            for (int i=0; i < pointCount; i++)
             {
-                gfxFrame.DrawLine(pen_axis, new Point(dataL + tick.pixel, dataB), new Point(dataL + tick.pixel, dataB + tick_size_minor));
-            }
-            foreach (Tick tick in axis.yAxis.Ticks((int)(tick_density_y * 5)))
-            {
-                gfxFrame.DrawLine(pen_axis, new Point(dataL-1, dataT + tick.pixel), new Point(dataL-1 - tick_size_minor, dataT + tick.pixel));
+                int xPx = axis1.xAxis.UnitToPx(Xs[i]);
+                int yPx = axis1.yAxis.UnitToPx(Ys[i]);
+                points[i] = new Point(xPx, yPx);
             }
 
-            // major ticks
-            foreach (Tick tick in axis.xAxis.Ticks((int)(tick_density_x)))
-            {
-                gfxFrame.DrawLine(pen_grid, new Point(dataL + tick.pixel, dataT), new Point(dataL + tick.pixel, dataB - 1));
-                gfxFrame.DrawLine(pen_axis, new Point(dataL + tick.pixel, dataB), new Point(dataL + tick.pixel, dataB + tick_size_major));
-                gfxFrame.DrawString(tick.label, font_axis_labels, new SolidBrush(color_axis_labels), new Point(dataL + tick.pixel, dataB + 8), sf_center);
-            }
-            foreach (Tick tick in axis.yAxis.Ticks((int)(tick_density_y * 5)))
-            {
-                gfxFrame.DrawLine(pen_grid, new Point(dataL, dataT + tick.pixel), new Point(dataR - tick_size_major, dataT + tick.pixel));
-                gfxFrame.DrawLine(pen_axis, new Point(dataL - 1, dataT + tick.pixel), new Point(dataL - 1 - tick_size_major, dataT + tick.pixel));
-                gfxFrame.DrawString(tick.label, font_axis_labels, new SolidBrush(color_axis_labels), new Point(dataL-7, dataT + tick.pixel-8), sf_right);
-            }
-            
-        }
-
-
-        /// <summary>
-        /// Format a number for a tick label by limiting its precision.
-        /// </summary>
-        /// <param name="value">tick position</param>
-        /// <param name="axisSpan">range of the axis in units (not pixels)</param>
-        /// <returns>formatted tick label</returns>
-        private string TickLabelFormat(double value, double axisSpan)
-        {
-            if (axisSpan < .01) return string.Format("{0:0.0000}", value);
-            if (axisSpan < .1) return string.Format("{0:0.000}", value);
-            if (axisSpan < 1) return string.Format("{0:0.00}", value);
-            if (axisSpan < 10) return string.Format("{0:0.0}", value);
-            return string.Format("{0:0}", value);
-        }
-
-        /// <summary>
-        /// demo: random size and color lines
-        /// </summary>
-        public void PlotDemoConfetti(int pieces=100, int length=20)
-        {
-            while (pieces-->0)
-            {
-                Point p1 = new Point(rand.Next(bmpData.Width), rand.Next(bmpData.Height));
-                Point p2 = new Point(p1.X+rand.Next(length), p1.Y + rand.Next(length));
-                Pen pen = new Pen(new SolidBrush(Color.FromArgb(150, rand.Next(200), rand.Next(200), rand.Next(200))), 10);
-                gfxData.DrawLine(pen, p1, p2);
-            }
-        }
-
-        /// <summary>
-        /// demo: a time-dependent sine wave the same dimensions as the data window
-        /// </summary>
-        public void PlotDemoSine()
-        {
-            double shiftX = rand.NextDouble() * bmpData.Width;
-            double freq = 2+rand.Next(20);
-            double amplitude = 20+rand.Next(bmpData.Height/2);
-            double offset = rand.Next(bmpData.Height);
-            Point[] points = new Point[bmpData.Width];
-
-            for (int i=0; i<bmpData.Width; i++)
-            {
-                double y = Math.Sin(shiftX+(double)i*freq/bmpData.Width)*amplitude+offset;
-                points[i] = new Point(i, (int)y);
-            }
-
-            Pen pen = new Pen(new SolidBrush(Color.FromArgb(150, rand.Next(200), rand.Next(200), rand.Next(200))), 5);
+            Pen pen = new Pen(new SolidBrush(PlotColor), plotLineWidth);
             gfxData.DrawLines(pen, points);
         }
+
+        public void PlotSignal(List<double> Ys, double pointSpacing = 1.0/1000, double firstPointX = 0, double offsetY = 0)
+        {
+
+            //TODO: make this run entirely on arrays, not lists.
+
+            List<Point> points = new List<Point>();
+            double dataPointsPerPixel = axis1.xAxis.unitsPerPx / pointSpacing;
+            double pixelsPerDataPoint = pointSpacing / axis1.xAxis.unitsPerPx;
+
+            // horizontal data density is greater than pixel density, so bin to the pixel size and plot min/max of each bin
+
+            double lastPointX = firstPointX + Ys.Count() * pointSpacing;
+            double binUnitsPerPx = axis1.xAxis.unitsPerPx / pointSpacing;
+            int dataMinPx = (int)((firstPointX - axis1.xAxis.min) / axis1.xAxis.unitsPerPx);
+            int dataMaxPx = (int)((lastPointX - axis1.xAxis.min) / axis1.xAxis.unitsPerPx);
+
+
+            if (dataPointsPerPixel < 1)
+            {
+                // data density < pixel density, so plot X/Y pairs
+                int iLeftSide = (int)(((axis1.xAxis.min - firstPointX) / axis1.xAxis.unitsPerPx) * dataPointsPerPixel);
+                int iRightSide = iLeftSide+(int)(dataPointsPerPixel * bmpData.Width);
+                for (int i= Math.Max(0, iLeftSide-2); i < Math.Min(iRightSide+2, Ys.Count - 1); i++)
+                {
+                    int xPx = axis1.xAxis.UnitToPx((double)i * pointSpacing - firstPointX);
+                    int yPx = axis1.yAxis.UnitToPx(Ys[i]);
+                    points.Add(new Point(xPx, yPx));
+                }
+            }
+            else
+            {
+                // data density > pixel density, so bin data to pixel size and plot bin min/max
+                for (int xPixel = Math.Max(0, dataMinPx); xPixel < Math.Min(bmpData.Width, dataMaxPx); xPixel++)
+                {
+                    int iLeft = (int)(binUnitsPerPx * (xPixel - dataMinPx));
+                    int iRight = (int)(iLeft + binUnitsPerPx);
+
+                    double yPxMin = Ys.GetRange(iLeft, iRight - iLeft).Min() + offsetY;
+                    double yPxMax = Ys.GetRange(iLeft, iRight - iLeft).Max() + offsetY;
+                    points.Add(new Point(xPixel, axis1.yAxis.UnitToPx(yPxMin)));
+                    points.Add(new Point(xPixel, axis1.yAxis.UnitToPx(yPxMax)));
+                }
+            }
+
+            
+            // perform the plot
+            if (points.Count > 1) gfxData.DrawLines(new Pen(PlotColor, plotLineWidth), points.ToArray());
+            if (dataPointsPerPixel < 1)
+            {
+                // density is less than one point per pixel, so show point markers
+                int pointSize = 1;
+                foreach (Point point in points)
+                {
+                    Rectangle rect = new Rectangle(point.X - pointSize/2, point.Y - pointSize/2, pointSize, pointSize);
+                    gfxData.DrawEllipse(new Pen(PlotColor, 3), rect);
+                }
+            }
+
+        }
+
+
+
+
+
+
+
 
 
     }

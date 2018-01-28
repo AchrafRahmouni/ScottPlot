@@ -15,10 +15,17 @@ namespace ScottPlot
     public partial class Form1 : Form
     {
         private ScottPlot scottPlot;
-
+        private List<double> million_points;
         public Form1()
         {
-            InitializeComponent();            
+            InitializeComponent();
+
+            // pre-populate a large dataset we can graph later
+            million_points = new List<double>();
+            for (int i = 0; i < 1e6; i++)
+            {
+                million_points.Add(Math.Sin((double)i / 1000.0));
+            }
         }
 
         private void Form1_Shown(object sender, EventArgs e)
@@ -41,6 +48,12 @@ namespace ScottPlot
                 case "sine":
                     scottPlot.PlotDemoSine();
                     break;
+                case "XY pairs":
+                    scottPlot.PlotDemoXY();
+                    break;
+                case "1M points":
+                    scottPlot.PlotSignal(million_points);
+                    break;
                 default:
                     scottPlot.Clear();
                     break;
@@ -57,6 +70,7 @@ namespace ScottPlot
         {
             if (scottPlot == null) return;
             scottPlot.SetSize(pictureBox1.Width, pictureBox1.Height);
+            RedrawEverything();
         }
 
         private void cb_animate_CheckedChanged(object sender, EventArgs e)
@@ -92,6 +106,31 @@ namespace ScottPlot
         private void cb_quality_CheckedChanged(object sender, EventArgs e)
         {
             scottPlot.antiAlias = cb_quality.Checked;
+            RedrawEverything();
+        }
+
+        private void btn_zoomIn_Click(object sender, EventArgs e)
+        {
+            scottPlot.Zoom(.5,.5);
+            RedrawEverything();
+        }
+
+        private void btn_zoomOut_Click(object sender, EventArgs e)
+        {
+            scottPlot.Zoom(1.1, 1.1);
+            RedrawEverything();
+        }
+
+        private void btn_NE_Click(object sender, EventArgs e)
+        {
+            scottPlot.Pan(.5, .5);
+            RedrawEverything();
+        }
+
+        private void btn_SW_Click(object sender, EventArgs e)
+        {
+            scottPlot.Pan(-.5, -.5);
+            RedrawEverything();
         }
     }
 }

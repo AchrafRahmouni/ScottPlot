@@ -66,7 +66,7 @@ namespace ScottPlot
 
         /// <summary>
         /// Zoom by a fraction on the center of an axis.
-        /// Values below 1 zoom out, those above 1 zoom in.
+        /// Values below 1 zoom in, those above 1 zoom out.
         /// </summary>
         /// <param name="xFrac">horizontal zoom fraction</param>
         /// <param name="yFrac">vertical zoom fraction</param>

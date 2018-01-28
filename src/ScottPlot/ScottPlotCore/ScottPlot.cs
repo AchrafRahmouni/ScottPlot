@@ -531,10 +531,9 @@ namespace ScottPlot
         {
             if (mouse_left_down_axis != null)
             {
-                double dX = mouse_left_down_position.X - mouse_position.X;
-                double dY = mouse_position.Y - mouse_left_down_position.Y;
-                dX *= axis1.xAxis.unitsPerPx;
-                dY *= axis1.yAxis.unitsPerPx;
+                // left-click-drag panning: shift the axis by the pixel distance dragged times unitsPerPixel.
+                double dX = (mouse_left_down_position.X - mouse_position.X) * mouse_left_down_axis.xAxis.unitsPerPx;
+                double dY = (mouse_position.Y - mouse_left_down_position.Y) * mouse_left_down_axis.yAxis.unitsPerPx;
                 axis1 = new FigureAxis(mouse_left_down_axis.xAxis.min + dX, mouse_left_down_axis.xAxis.max + dX,
                                        mouse_left_down_axis.yAxis.min + dY, mouse_left_down_axis.yAxis.max + dY,
                                        mouse_left_down_axis.xAxis.pxSize, mouse_left_down_axis.yAxis.pxSize);
@@ -542,16 +541,13 @@ namespace ScottPlot
             }
             else if (mouse_right_down_axis != null)
             {
-                //TODO: why is this so bad???
-                double dX = mouse_right_down_position.X - mouse_position.X;
-                double dY = mouse_position.Y - mouse_right_down_position.Y;
-                Console.WriteLine($"{dX}, {dY}");
-                if (dX > 0) dX = Math.Sqrt(50.0 * Math.Abs(dX) * Math.Pow(.02, Math.Abs(dX) / 10000.0)) * dX / Math.Abs(dX);
-                if (dY < 0) dY = Math.Sqrt(50.0 * Math.Abs(dY) * Math.Pow(.02, Math.Abs(dY) / 10000.0)) * dY / Math.Abs(dY);
-                dX *= axis1.xAxis.unitsPerPx;
-                dY *= axis1.yAxis.unitsPerPx;
-                axis1 = new FigureAxis(mouse_right_down_axis.xAxis.min-dX, mouse_right_down_axis.xAxis.max+dX,
-                                       mouse_right_down_axis.yAxis.min-dY, mouse_right_down_axis.yAxis.max+dY,
+                // right-click-drag zooming: expand the edges by the same distance of the drag when zooming out, or sqrt(distance) when zooming in.
+                double dX = (mouse_right_down_position.X - mouse_position.X) * mouse_right_down_axis.xAxis.unitsPerPx;
+                double dY = (mouse_position.Y - mouse_right_down_position.Y) * mouse_right_down_axis.yAxis.unitsPerPx;
+                if (dX < 0) dX = -Math.Sqrt(Math.Abs(dX));
+                if (dY < 0) dY = -Math.Sqrt(Math.Abs(dY));
+                axis1 = new FigureAxis(mouse_right_down_axis.xAxis.min - dX, mouse_right_down_axis.xAxis.max + dX,
+                                       mouse_right_down_axis.yAxis.min - dY, mouse_right_down_axis.yAxis.max + dY,
                                        mouse_right_down_axis.xAxis.pxSize, mouse_right_down_axis.yAxis.pxSize);
                 Clear();
             }
